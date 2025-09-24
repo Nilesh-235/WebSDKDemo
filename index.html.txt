@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Adobe WebSDK Event POC</title>
+
+  <!-- Load Adobe WebSDK via Launch -->
+  <script src="https://assets.adobedtm.com/e72b4113c11a/dea835227b36/launch-5cc6da518e0d-development.min.js" async></script>
+</head>
+
+<body>
+  <h1>Welcome to Adobe WebSDK Demo Page</h1>
+
+  <!-- Button Click Section -->
+  <button class="clickBtn">Click Me</button>
+
+  <!-- Email Form Section -->
+  <form id="emailForm">
+    <label for="email">Enter Email:</label>
+    <input type="email" id="emailInput" name="email" required />
+    <button type="submit">Submit</button>
+  </form>
+
+  <script>
+    // Helper function to get device info
+    function getDeviceInfo() {
+      return {
+        screenHeight: window.screen.height,
+        screenWidth: window.screen.width,
+        screenOrientation: (screen.orientation || {}).type || "unknown"
+      };
+    }
+
+    // Wait for Alloy to be available
+    function waitForAlloy(callback) {
+      if (typeof alloy === "function") {
+        callback();
+      } else {
+        setTimeout(function () {
+          waitForAlloy(callback);
+        }, 100);
+      }
+    }
+
+    waitForAlloy(function () {
+      // Configure Alloy
+      alloy("configure", {
+        edgeConfigId: "993a5934-4f41-4827-a059-00508caf6325",
+        orgId: "0CEB60F754C7E06B0A4C98A2@AdobeOrg",
+        debugEnabled: true
+      });
+
+      // Pageview event
+      document.addEventListener("DOMContentLoaded", function () {
+        console.log("Page loaded – sending pageview event");
+        alloy("sendEvent", {
+          xdm: {
+            eventType: "pageView",
+            timestamp: new Date().toISOString(),
+            web: {
+              webPageDetails: {
+                name: "Home Page",
+                URL: window.location.href
+              }
+            },
+            device: getDeviceInfo()
+          }
+        });
+      });
+
+      // Email form submission tracking
+      document.getElementById("emailForm").addEventListener("submit", function (e) {
+        e.preventDefault(); // Prevent actual form submission
+
+        const email = document.getElementById("emailInput").value;
+
+        console.log("Email submitted – sending form submit event");
+
+        alloy("sendEvent", {
+          xdm: {
+            eventType: "formSubmit",
+            timestamp: new Date().toISOString(),
+            person: {
+              email: {
+                address: email
+              }
+            },
+            web: {
+              webInteraction: {
+                name: "Email Form Submission",
+                type: "form"
+              }
+            },
+            device: getDeviceInfo()
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
